@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RA Photos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <style>
+    * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Google Sans', sans-serif;
+}
+
+body {
+    background-color: #ffffff;
+    color: #202124;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* হেডার */
+.gphotos-header {
+    height: 64px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 100;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #5f6368;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.icon-btn:hover {
+    background: #f1f3f4;
+}
+
+.brand {
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+}
+
+.logo-red { color: #ea4335; }
+.logo-blue { color: #4285f4; }
+.logo-green { color: #34a853; }
+.logo-yellow { color: #fbbc05; }
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* কন্টেইনার ও গ্রিড লেআউট (গুগল ফটোস স্টাইল) */
+.gphotos-container {
+    padding: 12px;
+    flex: 1;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 4px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: #f1f3f4;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.2s ease;
+}
+
+.photo-item:hover img {
+    transform: scale(1.03);
+}
+
+/* ভিডিও ও অডিওর ব্যাজ */
+.media-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.audio-box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #e8f0fe;
+    color: #1a73e8;
+}
+
+.audio-box i {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.audio-box span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0 8px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* লোডিং ও এম্পটি স্টেট */
+.loader-state, .empty-state {
+    text-align: center;
+    padding: 60px 0;
+    color: #5f6368;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4285f4;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ফুলস্ক্রিন প্রিভিউয়ার (Google Photos Lightbox) */
+.gphotos-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+}
+
+.gphotos-viewer.active {
+    display: flex;
+}
+
+.viewer-top-bar {
+    height: 60px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+}
+
+.text-white { color: #fff !important; }
+
+.viewer-filename {
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
+.viewer-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.viewer-body img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+}
+
+.viewer-body video {
+    max-width: 100%;
+    max-height: 85vh;
+    outline: none;
+}
+
+.viewer-audio-player {
+    background: #202124;
+    padding: 30px;
+    border-radius: 16px;
+    text-align: center;
+    color: #fff;
+}
+
+.viewer-audio-player i {
+    font-size: 4rem;
+    color: #8ab4f8;
+    margin-bottom: 20px;
+}
+
+.viewer-audio-player audio {
+    width: 300px;
+}
+
+  </style>
+
+    <!-- গুগল ফটোস স্টাইল হেডার -->
+    <header class="gphotos-header">
+        <div class="header-left">
+            <a href="manu.html" class="icon-btn" title="Back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="brand">
+                <span class="logo-red">P</span>
+                <span class="logo-blue">h</span>
+                <span class="logo-green">o</span>
+                <span class="logo-yellow">t</span>
+                <span class="logo-blue">o</span>
+                <span class="logo-red">s</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="icon-btn" id="btnRefreshMedia" title="Refresh">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <div class="user-avatar">
+                <img src="imgs/profile.jpg" alt="User" onerror="this.src='https://via.placeholder.com/32'">
+            </div>
+        </div>
+    </header>
+
+    <!-- ফটোস গ্যালারি কন্টেইনার -->
+    <main class="gphotos-container">
+        <div id="mediaLoader" class="loader-state">
+            <div class="spinner"></div>
+            <p>গুগল ফটোস লোড হচ্ছে...</p>
+        </div>
+
+        <div id="mediaEmpty" class="empty-state" style="display: none;">
+            <i class="fa-regular fa-image"></i>
+            <p>কোনো ছবি বা মিডিয়া ফাইল পাওয়া যায়নি</p>
+        </div>
+
+        <!-- সব ফাইল এক সাথে এখানে গ্রিড আকারে থাকবে -->
+        <div id="photosGrid" class="photos-grid"></div>
+    </main>
+
+    <!-- গুগল ফটোস ফুল-স্ক্রিন প্রিভিউয়ার -->
+    <div class="gphotos-viewer" id="gphotosViewer">
+        <div class="viewer-top-bar">
+            <button class="icon-btn text-white" id="btnCloseViewer">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <span class="viewer-filename" id="viewerFileName">File Name</span>
+            <div class="viewer-actions">
+                <a id="btnDownloadMedia" class="icon-btn text-white" download target="_blank" title="Download">
+                    <i class="fa-solid fa-download"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="viewer-body" id="viewerBody"></div>
+    </div>
+
+    <script>
+      const DEFAULT_CONFIG = {
+    user: 'mdakash200',
+    repo: 'Moviebox',
+    token: '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'
+};
+
+function getConfig() {
+    return {
+        user: localStorage.getItem('gh_user') || DEFAULT_CONFIG.user,
+        repo: localStorage.getItem('gh_repo') || DEFAULT_CONFIG.repo,
+        token: localStorage.getItem('gh_token') || DEFAULT_CONFIG.token
+    };
+}
+
+const EXTENSIONS = {
+    image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    video: ['mp4', 'mkv', 'webm'],
+    audio: ['mp3', 'wav', 'ogg']
+};
+
+let mediaList = [];
+
+const photosGrid = document.getElementById('photosGrid');
+const mediaLoader = document.getElementById('mediaLoader');
+const mediaEmpty = document.getElementById('mediaEmpty');
+
+const gphotosViewer = document.getElementById('gphotosViewer');
+const viewerBody = document.getElementById('viewerBody');
+const viewerFileName = document.getElementById('viewerFileName');
+const btnDownloadMedia = document.getElementById('btnDownloadMedia');
+const btnCloseViewer = document.getElementById('btnCloseViewer');
+const btnRefreshMedia = document.getElementById('btnRefreshMedia');
+
+function getMediaType(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    if (EXTENSIONS.image.includes(ext)) return 'image';
+    if (EXTENSIONS.video.includes(ext)) return 'video';
+    if (EXTENSIONS.audio.includes(ext)) return 'audio';
+    return null;
+}
+
+// গিটহাব থেকে সব মিডিয়া ফাইল লোড
+async function loadGPhotos() {
+    const cfg = getConfig();
+    mediaLoader.style.display = 'block';
+    mediaEmpty.style.display = 'none';
+    photosGrid.innerHTML = '';
+
+    try {
+        const res = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents`, {
+            headers: { 'Authorization': `Bearer ${cfg.token}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to load files');
+
+        const data = await res.json();
+        
+        // শুধু মিডিয়া ফাইল ফিল্টার
+        mediaList = data.filter(file => file.type === 'file' && getMediaType(file.name) !== null)
+                        .map(file => ({
+                            name: file.name,
+                            url: file.download_url,
+                            type: getMediaType(file.name)
+                        }));
+
+        mediaLoader.style.display = 'none';
+
+        if (mediaList.length === 0) {
+            mediaEmpty.style.display = 'block';
+            return;
+        }
+
+        renderGrid();
+
+    } catch (err) {
+        mediaLoader.style.display = 'none';
+        mediaEmpty.style.display = 'block';
+    }
+}
+
+// এক সারিতে/গ্রিডে সব ফাইল সাজানো
+function renderGrid() {
+    photosGrid.innerHTML = '';
+
+    mediaList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'photo-item';
+
+        if (item.type === 'image') {
+            div.innerHTML = `<img src="${item.url}" alt="${item.name}" loading="lazy">`;
+        } else if (item.type === 'video') {
+            div.innerHTML = `
+                <img src="${item.url}" style="display:none;" onerror="this.nextElementSibling.style.display='flex'">
+                <div class="audio-box" style="background:#fce8e6; color:#d93025;">
+                    <i class="fa-solid fa-circle-play"></i>
+                    <span>${item.name}</span>
+                </div>
+                <div class="media-badge"><i class="fa-solid fa-play"></i> Video</div>
+            `;
+        } else if (item.type === 'audio') {
+            div.innerHTML = `
+                <div class="audio-box">
+                    <i class="fa-solid fa-music"></i>
+                    <span>${item.name}</span>
+                </div>
+                <div class="media-badge"><i class="fa-solid fa-headphones"></i> Audio</div>
+            `;
+        }
+
+        div.addEventListener('click', () => openViewer(item));
+        photosGrid.appendChild(div);
+    });
+}
+
+// গুগল ফটোস প্রিভিউয়ার চালু
+function openViewer(item) {
+    viewerBody.innerHTML = '';
+    viewerFileName.textContent = item.name;
+    btnDownloadMedia.href = item.url;
+
+    if (item.type === 'image') {
+        viewerBody.innerHTML = `<img src="${item.url}" alt="${item.name}">`;
+    } else if (item.type === 'video') {
+        viewerBody.innerHTML = `<video src="${item.url}" controls autoplay></video>`;
+    } else if (item.type === 'audio') {
+        viewerBody.innerHTML = `
+            <div class="viewer-audio-player">
+                <i class="fa-solid fa-compact-disc fa-spin"></i>
+                <br><br>
+                <audio src="${item.url}" controls autoplay></audio>
+            </div>
+        `;
+    }
+
+    gphotosViewer.classList.add('active');
+}
+
+// প্রিভিউয়ার বন্ধ
+function closeViewer() {
+    gphotosViewer.classList.remove('active');
+    viewerBody.innerHTML = ''; // প্লেয়ার বা স্ট্রিমিং অফ করার জন্য
+}
+
+btnCloseViewer.addEventListener('click', closeViewer);
+btnRefreshMedia.addEventListener('click', loadGPhotos);
+document.addEventListener('DOMContentLoaded', loadGPhotos);
+
+    </script>
+</body>
+</html>

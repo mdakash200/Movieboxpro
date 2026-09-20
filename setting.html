@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - RA OS</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+<style>
+  :root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --card-border: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* হেডার স্টাইল */
+.settings-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 24px 32px;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #0f172a;
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transform: translateX(-2px);
+}
+
+.header-title h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-title p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* সেটিং কন্টেইনার */
+.settings-container {
+    max-width: 680px;
+    width: 100%;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* কার্ড লেআউট */
+.setting-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.setting-card.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.card-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    background: #0f172a;
+}
+
+.blue-glow { color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
+.green-glow { color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+.red-glow { color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+.card-text h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.card-text p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* টগল সুইচ */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #334155;
+    transition: .3s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider { background-color: var(--accent-green); }
+input:checked + .slider:before { transform: translateX(24px); }
+
+/* ওয়েবসাইট বক্স */
+.website-box {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    background: #0f172a;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 6px 6px 6px 14px;
+}
+
+.input-icon { color: var(--text-muted); margin-right: 10px; }
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.btn-save {
+    background: var(--accent-blue);
+    color: #0f172a;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-save:hover { opacity: 0.9; }
+
+.preview-link-bar {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 4px;
+}
+
+.preview-link-bar a {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.preview-link-bar a:hover { text-decoration: underline; }
+
+/* ডেনজার কার্ড */
+.danger-card {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.03);
+}
+
+.btn-danger {
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-danger:hover { background: #dc2626; }
+
+</style>
+    <!-- হেডার -->
+    <header class="settings-header">
+        <a href="manu.html" class="back-btn" title="Back to Dashboard">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div class="header-title">
+            <h2><i class="fa-solid fa-sliders"></i> System Settings</h2>
+            <p>কনফিগারেশন ও কন্ট্রোল প্যানেল</p>
+        </div>
+    </header>
+
+    <!-- সেটিং কন্টেইনার -->
+    <main class="settings-container">
+
+        <!-- ১. কানেক্ট এক্সেস টোকেন (On/Off) -->
+        <div class="setting-card">
+            <div class="card-left">
+                <div class="icon-box blue-glow">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <div class="card-text">
+                    <h3>Connect Access Token</h3>
+                    <p>গিটহাব এপিআই এক্সেস টোকেন স্ট্যাটাস অন বা অফ রাখুন</p>
+                </div>
+            </div>
+            <div class="card-right">
+                <label class="switch">
+                    <input type="checkbox" id="tokenToggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- ২. মাই কন্টাক্ট আইডি ও পার্সোনাল ওয়েবসাইট -->
+        <div class="setting-card vertical">
+            <div class="card-left">
+                <div class="icon-box green-glow">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <div class="card-text">
+                    <h3>My Contact ID & Portfolio</h3>
+                    <p>ব্যক্তিগত ওয়েবসাইট লিংক এবং প্রোফাইল এড্রেস</p>
+                </div>
+            </div>
+            
+            <div class="website-box">
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-link input-icon"></i>
+                    <input type="text" id="contactIdInput" placeholder="
+
+https://mdrupa720.github.io/Sora/">
+                    <button id="btnSaveContact" class="btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save
+                    </button>
+                </div>
+                <div class="preview-link-bar">
+                    <span>Direct Visit:</span>
+                    <a href="https://mdrupa720.github.io/Sora/<id="contactWebLink" target="_blank">
+                        https://mdrupa720.github.io/Sora/" <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ৩. রিসেট সিস্টেম ডাটা -->
+        <div class="setting-card danger-card">
+            <div class="card-left">
+                <div class="icon-box red-glow">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="card-text">
+                    <h3>Reset System Data</h3>
+                    <p>সমস্ত ক্যাশ ফাইল, লোকাল সেটিংস ও টোকেন মেমোরি রিসেট করুন</p>
+                </div>
+            </div>
+            <div class="card-right">
+                <button id="btnResetSystem" class="btn-danger">
+                    <i class="fa-solid fa-rotate-left"></i> Reset System
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>document.addEventListener('DOMContentLoaded', () => {
+    const tokenToggle = document.getElementById('tokenToggle');
+    const contactIdInput = document.getElementById('contactIdInput');
+    const btnSaveContact = document.getElementById('btnSaveContact');
+    const btnResetSystem = document.getElementById('btnResetSystem');
+    const contactWebLink = document.getElementById('contactWebLink');
+
+    // ১. টোকেন সুইচ স্ট্যাটাস
+    const isTokenConnected = localStorage.getItem('token_connected') !== 'off';
+    if (tokenToggle) {
+        tokenToggle.checked = isTokenConnected;
+        tokenToggle.addEventListener('change', () => {
+            const status = tokenToggle.checked ? 'on' : 'off';
+            localStorage.setItem('token_connected', status);
+        });
+    }
+
+    // ২. মাই কন্টাক্ট আইডি / ওয়েবসাইট লিংক লোড ও সেভ
+    const defaultSite = 'https://mdrupa720.github.io/Sora/';
+    const savedContact = localStorage.getItem('my_contact_id') || defaultSite;
+    
+    contactIdInput.value = savedContact;
+    updateLinkDisplay(savedContact);
+
+    btnSaveContact.addEventListener('click', () => {
+        const val = contactIdInput.value.trim();
+        if (val) {
+            localStorage.setItem('my_contact_id', val);
+            updateLinkDisplay(val);
+            alert('Website Link successfully updated!');
+        }
+    });
+
+    function updateLinkDisplay(urlText) {
+        const fullUrl = urlText.startsWith('http') ? urlText : `https://${urlText}`;
+        contactWebLink.href = fullUrl;
+        contactWebLink.innerHTML = `${urlText} <i class="fa-solid fa-arrow-up-right-from-square"></i>`;
+    }
+
+    // ৩. সিস্টেম রিসেট
+    if (btnResetSystem) {
+        btnResetSystem.addEventListener('click', () => {
+            if (confirm('আপনি কি নিশ্চিত যে সিস্টেমের সমস্ত লোকাল ডাটা রিসেট করতে চান?')) {
+                localStorage.clear();
+                alert('সিস্টেম ডাটা রিসেট সফল হয়েছে!');
+                window.location.href = 'manu.html';
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

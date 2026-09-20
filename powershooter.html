@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Power Shooter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    html,body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+      background: radial-gradient(#001, #000 80%);
+      image-rendering: pixelated;
+    }
+    .touch-btn {
+      position: fixed;
+      bottom: 20px;
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #fff3;
+      border-radius: 50%;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Press Start 2P', monospace;
+      color: #fff;
+      font-size: 1.2rem;
+      box-shadow: 0 0 12px #fff2;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .touch-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    #left {
+      left: 20px;
+    }
+    #right {
+      right: 20px;
+    }
+    #score, #lives {
+      position: fixed;
+      top: 10px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1rem;
+      color: #ffe600;
+      text-shadow: 0 0 6px #ff0;
+      user-select: none;
+      z-index: 10;
+    }
+    #score { left: 10px; }
+    #lives {
+      right: 10px;
+      color: #ff6b6b;
+      text-shadow: 0 0 6px #f00;
+    }
+    #game-over {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.2rem;
+      color: #f00;
+      background: rgba(0, 0, 0, .85);
+      padding: 24px 32px;
+      border: 3px solid #f00;
+      text-align: center;
+      display: none;
+      z-index: 20;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Coins: 0</div>
+  <div id="lives">❤❤❤</div>
+  <div id="game-over">GAME OVER</div>
+  <canvas id="game"></canvas>
+  <div id="left" class="touch-btn">◀</div>
+  <div id="right" class="touch-btn">▶</div>
+
+  <script>
+    const COOLDOWN_MS = 0* 1 * 1000;
+    if (Date.now() - (+localStorage.getItem('lastPlay') || 0) < COOLDOWN_MS) {
+      location.href = '#';
+    }
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+    let W, H; function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; } resize();
+    addEventListener('resize', resize);
+
+    const scoreEl = document.getElementById('score');
+    const livesEl = document.getElementById('lives');
+    const gameOverEl = document.getElementById('game-over');
+
+    const player = { x: W / 2, y: H - 80, w: 40, h: 40, speed: 320 };
+    const bullets = [], enemies = [];
+
+    let BULLET_SPEED = 520;
+    let ENEMY_SPEED = 140;
+    let ENEMY_INTERVAL = 1000;
+    let SHOT_INTERVAL = 200;
+
+    const SPEED_UP_INTERVAL = 3000;
+    const SPEED_FACTOR = 1.10;
+
+    setInterval(() => {
+      player.speed *= SPEED_FACTOR;
+      BULLET_SPEED *= SPEED_FACTOR;
+      ENEMY_SPEED *= SPEED_FACTOR;
+    }, SPEED_UP_INTERVAL);
+
+    let coins = +localStorage.getItem('coins') || 0;
+    scoreEl.textContent = `Coins: ${coins}`;
+    let lives = 3, lastSpawn = 0, lastShot = 0, gameOver = false, moveL = false, moveR = false;
+
+    const bind = (el, dir) => {
+      el.addEventListener('pointerdown', () => dir === 'L' ? moveL = true : moveR = true);
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+        el.addEventListener(ev, () => dir === 'L' ? moveL = false : moveR = false));
+    };
+    bind(document.getElementById('left'), 'L');
+    bind(document.getElementById('right'), 'R');
+
+    addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') moveL = true;
+      if (e.key === 'ArrowRight') moveR = true;
+    });
+    addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft') moveL = false;
+      if (e.key === 'ArrowRight') moveR = false;
+    });
+
+    const plane = ['0001000', '0011100', '0111110', '1111111', '0111110', '0011100', '0101010', '1000001'];
+    const enemy = ['011110', '111111', '110011', '110011', '111111', '101101'];
+    const draw = (s, x, y, pix, col) => {
+      ctx.save(); ctx.translate(x, y); ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 6;
+      s.forEach((row, j) => [...row].forEach((c, i) =>
+        c === '1' && ctx.fillRect((i - row.length / 2) * pix, (j - s.length / 2) * pix, pix, pix)));
+      ctx.restore();
+    };
+
+    let last = performance.now(); requestAnimationFrame(loop);
+    function loop(now) {
+      const dt = (now - last) / 1000; last = now;
+      if (!gameOver) { update(dt, now); render(); requestAnimationFrame(loop); }
+    }
+
+    function update(dt, now) {
+      if (moveL) player.x -= player.speed * dt;
+      if (moveR) player.x += player.speed * dt;
+      player.x = clamp(player.x, player.w / 2, W - player.w / 2);
+
+      if (now - lastShot > SHOT_INTERVAL) {
+        bullets.push({ x: player.x, y: player.y - 25 });
+        lastShot = now;
+      }
+
+      if (now - lastSpawn > ENEMY_INTERVAL) {
+        for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++)
+          enemies.push({ x: 40 + Math.random() * (W - 80), y: -60 });
+        lastSpawn = now;
+      }
+
+      bullets.forEach(b => b.y -= BULLET_SPEED * dt);
+      enemies.forEach(e => e.y += ENEMY_SPEED * dt);
+
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (e.y > H + 60) { enemies.splice(i, 1); continue; }
+        if (Math.abs(player.x - e.x) < 28 && Math.abs(player.y - e.y) < 28) {
+          enemies.splice(i, 1); damage(); continue;
+        }
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const b = bullets[j];
+          if (Math.abs(b.x - e.x) < 24 && Math.abs(b.y - e.y) < 24) {
+            bullets.splice(j, 1); enemies.splice(i, 1);
+            coins += 10; scoreEl.textContent = `Coins: ${coins}`; localStorage.setItem('coins', coins);
+            break;
+          }
+        }
+      }
+      bullets.filter(b => b.y < -40).forEach(b => bullets.splice(bullets.indexOf(b), 1));
+    }
+
+    function damage() {
+      lives--; livesEl.textContent = '❤'.repeat(lives);
+      if (lives <= 0) {
+        gameOver = true; gameOverEl.style.display = 'block';
+        localStorage.setItem('lastPlay', Date.now());
+        setTimeout(() => location.href = 'power shooter.html', 2000);
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#111a'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#3338'; for (let i = 0; i < 50; i++) ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+
+      draw(plane, player.x, player.y, 6, '#0ff');
+      ctx.fillStyle = '#ff0'; ctx.shadowColor = '#ff0'; ctx.shadowBlur = 4;
+      bullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+      ctx.shadowBlur = 0;
+      enemies.forEach(e => draw(enemy, e.x, e.y, 5, '#f06'));
+    }
+  
+  </script>
+</body>
+</html>

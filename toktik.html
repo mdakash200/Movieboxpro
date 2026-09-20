@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tic-Tac-Toe Neo</title>
+
+  <style>
+  /* Local font */
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('PressStart2P-Regular.ttf') format('truetype');
+  }
+
+  :root {
+    --bg: #10101a;
+    --grid: #00ffff;
+    --x-color: #ff6ec7;
+    --o-color: #00ff90;
+    --text: #ffffff;
+    --overlay: #000000cc;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Press Start 2P', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+
+  #coinBar {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 8rem);
+    grid-template-rows: repeat(3, 8rem);
+    gap: 0.5rem;
+  }
+
+  .square {
+    width: 8rem;
+    height: 8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 3.5rem;
+    background: #1a1a2e;
+    border: 3px solid var(--grid);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .square:hover {
+    background: #222244;
+  }
+
+  #picker {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #picker h1 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #picker button {
+    margin: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--grid);
+    color: #000;
+    cursor: pointer;
+  }
+
+  #picker button:hover {
+    opacity: 0.9;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .overlay h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .overlay p {
+    margin-bottom: 1.5rem;
+  }
+
+  .overlay button {
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    background: var(--grid);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  .overlay button:hover {
+    opacity: 0.9;
+  }
+  </style>
+</head>
+<body>
+
+<div id="coinBar">🪙 Coins: <span id="coins">0</span></div>
+
+<div class="board" id="board"></div>
+
+<div id="picker">
+  <h1>Choose your symbol</h1>
+  <div>
+    <button data-pick="X">X</button>
+    <button data-pick="O">O</button>
+  </div>
+</div>
+
+<script>
+const COINS_WIN = 100;
+const COINS_LOSE = -500;
+
+let coins = parseInt(localStorage.getItem('coins') || '0');
+const coinSpan = document.getElementById('coins');
+function updateCoins(delta) {
+  coins += delta;
+  localStorage.setItem('coins', coins);
+  coinSpan.textContent = coins;
+}
+updateCoins(0);
+
+const boardEl = document.getElementById('board');
+for (let i = 0; i < 9; i++) {
+  const sq = document.createElement('div');
+  sq.className = 'square';
+  sq.dataset.pos = i;
+  boardEl.appendChild(sq);
+}
+
+let human = 'X', cpu = 'O', gameOver = false;
+const grid = Array(9).fill(null);
+const WIN_LINES = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+
+function setMark(pos, mark) {
+  grid[pos] = mark;
+  const sq = boardEl.children[pos];
+  sq.textContent = mark;
+  sq.style.color = (mark === 'X') ? 'var(--x-color)' : 'var(--o-color)';
+}
+
+function emptyCells() {
+  return grid.reduce((arr, v, i) => {
+    if (!v) arr.push(i);
+    return arr;
+  }, []);
+}
+
+function checkWin(mark) {
+  return WIN_LINES.some(line => line.every(i => grid[i] === mark));
+}
+
+function aiMove() {
+  const empties = emptyCells();
+  if (!empties.length) return;
+  const pos = empties[Math.floor(Math.random() * empties.length)];
+  setMark(pos, cpu);
+}
+
+function showOverlay(text, delta) {
+  gameOver = true;
+  updateCoins(delta);
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.innerHTML = `
+    <h2>${text}</h2>
+    <p>Coins ${delta > 0 ? '+' : ''}${delta}</p>
+    <button id="again">Play Again</button>`;
+  document.body.appendChild(ov);
+  document.getElementById('again').onclick = () => {
+    ov.remove();
+    resetGame();
+  };
+}
+
+function resetGame() {
+  grid.fill(null);
+  Array.from(boardEl.children).forEach(sq => sq.textContent = '');
+  gameOver = false;
+  if (Math.random() < 0.5) aiMove();
+}
+
+boardEl.addEventListener('click', e => {
+  const sq = e.target.closest('.square');
+  if (!sq || gameOver) return;
+  const pos = +sq.dataset.pos;
+  if (grid[pos]) return;
+  setMark(pos, human);
+
+  if (checkWin(human)) {
+    showOverlay('You win!', COINS_WIN);
+    return;
+  }
+
+  if (!emptyCells().length) {
+    showOverlay('Draw!', 0);
+    return;
+  }
+
+  aiMove();
+  if (checkWin(cpu)) {
+    showOverlay('You lose!', COINS_LOSE);
+    return;
+  }
+
+  if (!emptyCells().length) {
+    showOverlay('Draw!', 0);
+  }
+});
+
+document.querySelectorAll('#picker button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    human = btn.dataset.pick;
+    cpu = (human === 'X') ? 'O' : 'X';
+    document.getElementById('picker').remove();
+    resetGame();
+  });
+});
+  
+</script>
+
+</body>
+</html>

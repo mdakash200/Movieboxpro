@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RA hub - File Manager Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-primary: #090d16;
+            --bg-secondary: rgba(22, 31, 48, 0.7);
+            --bg-card: rgba(15, 23, 42, 0.65);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.4);
+            --accent-blue: #3b82f6;
+            --accent-blue-glow: rgba(59, 130, 246, 0.4);
+            --accent-red: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, var(--bg-primary) 80%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--accent-green);
+            box-shadow: 0 0 12px var(--accent-green-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .brand-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .brand-text {
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .menu-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.65rem 1.3rem;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu-btn:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            box-shadow: 0 0 15px var(--accent-green-glow);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* এক্সেস টোকেন চেক না হওয়া পর্যন্ত বাটন অদৃশ্য থাকবে */
+        .btn-open-os {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            display: none; 
+        }
+
+        .btn-open-os:hover {
+            border-color: var(--accent-blue);
+            color: #ffffff;
+            background: var(--accent-blue);
+            box-shadow: 0 0 15px var(--accent-blue-glow);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 125%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 230px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 200;
+        }
+
+        .dropdown-menu.active {
+            display: flex;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            padding: 0.95rem 1.3rem;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .file-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .file-table th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary);
+            padding: 1.1rem 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .file-table td {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+
+        .file-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .file-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-weight: 600;
+        }
+
+        .file-icon {
+            color: var(--accent-blue);
+            font-size: 1.3rem;
+            filter: drop-shadow(0 0 6px var(--accent-blue-glow));
+        }
+
+        .btn-download {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download:hover {
+            background: var(--accent-green);
+            color: #ffffff;
+            box-shadow: 0 0 15px var(--accent-green-glow);
+        }
+
+        .btn-delete-item {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.5rem 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete-item:hover {
+            background: var(--accent-red);
+            color: #ffffff;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 480px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .close-btn:hover { color: var(--accent-red); }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green-glow);
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(16, 185, 129, 0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            background: rgba(16, 185, 129, 0.03);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 15px var(--accent-green-glow);
+        }
+
+        .drop-zone i {
+            font-size: 2.5rem;
+            color: var(--accent-green);
+            margin-bottom: 0.6rem;
+        }
+
+        .file-selected-name {
+            margin-top: 0.6rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            font-size: 0.9rem;
+        }
+
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-green), #34d399);
+            transition: width 0.3s ease;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px var(--accent-green-glow);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--accent-green-glow);
+        }
+
+        .btn-danger-submit {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-avatar">
+                <img src="imgs/profile.jpg" alt="RA Logo" onerror="this.src='https://via.placeholder.com/42?text=RA'">
+            </div>
+            <span class="brand-text">RA hub</span>
+        </div>
+
+        <div class="nav-actions">
+            <!-- Open OS বাটন (প্রাথমিক অবস্থায় অদৃশ্য) -->
+            <a href="manu.html" class="menu-btn btn-open-os">
+                <i class="fa-solid fa-desktop"></i> Open OS
+            </a>
+
+            <button class="menu-btn" id="menuToggle">
+                <i class="fa-solid fa-bars"></i>
+                <span>মেনু</span>
+                <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem;"></i>
+            </button>
+
+            <div class="dropdown-menu" id="dropdownMenu">
+                <button class="dropdown-item" id="btnOpenUpload">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-green);"></i>
+                    <span>1. Upload</span>
+                </button>
+                <button class="dropdown-item danger" id="btnOpenDelete">
+                    <i class="fa-solid fa-trash-can" style="color: var(--accent-red);"></i>
+                    <span>2. Upload File Delete</span>
+                </button>
+                <button class="dropdown-item" id="btnOpenSettings">
+                    <i class="fa-solid fa-gear" style="color: var(--accent-blue);"></i>
+                    <span>3. Config Settings</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">
+                ফাইল সমূহ 
+                <span class="badge" id="fileCount">0</span>
+            </h2>
+            <button class="menu-btn" id="btnRefresh" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                <i class="fa-solid fa-rotate-right"></i> রিফ্রেশ
+            </button>
+        </div>
+
+        <div class="file-card">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>ফাইল নাম</th>
+                        <th>টাইপ / সাইজ</th>
+                        <th style="text-align: right;">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="fileListBody"></tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fa-regular fa-folder-open"></i>
+                <p>কোনো ফাইল পাওয়া যায়নি অথবা GitHub API এক্সেস টোকেন ভুল।</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>GitHub-এ ফাইল আপলোড</h3>
+                <button class="close-btn" onclick="closeModals()">&times;</button>
+            </div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>ফাইল সিলেক্ট করুন</label>
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>ফাইল ড্র্যাগ করে আনুন অথবা <b>ক্লিক করুন</b></p>
+                        <div class="file-selected-name" id="selectedFileName"></div>
+                        <input type="file" id="fileInput" style="display: none;" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>কমিট মেসেজ (Commit Message)</label>
+                    <input type="text" id="commitMsg" value="Add new file via RA hub" required>
+                </div>
+
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-label">
+                        <span id="uploadStatusText">আপলোড হচ্ছে...</span>
+                        <span id="uploadProgressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="uploadProgressBar"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="uploadSubmitBtn">আপলোড নিশ্চিত করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>ফাইল মুছে ফেলুন</h3>
+                <button class="close-btn" onclick="closeModals()">&times;</button>
+            </div>
+            <form id="deleteForm">
+                <div class="form-group">
+                    <label>মুছে ফেলার ফাইল সিলেক্ট করুন</label>
+                    <select id="deleteFileSelect" required>
+                        <option value="">-- সিলেক্ট ফাইল --</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit btn-danger-submit" id="deleteSubmitBtn">ডিলেট করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>RA hub Setup</h3>
+                <button class="close-btn" onclick="closeModals()">&times;</button>
+            </div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label>GitHub Username</label>
+                    <input type="text" id="cfgUser" placeholder="ex: mdakash200" required>
+                </div>
+                <div class="form-group">
+                    <label>Repository Name</label>
+                    <input type="text" id="cfgRepo" placeholder="ex: Moviebox" required>
+                </div>
+                <div class="form-group">
+                    <label>Personal Access Token (PAT)</label>
+                    <input type="password" id="cfgToken" placeholder="ghp_xxxxxxxxxxxx" required>
+                </div>
+                <button type="submit" class="btn-submit">সেভ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const PROTECTED_FILES = [
+    'index.html', 
+    'manu.html', 
+    'setting.html', 
+    'Flappybird.html', 
+    'Powershooter.html', 
+    'Tiktock.html', 
+    'app.js', 
+    'script.js'
+];
+
+const DEFAULT_CONFIG = {
+    user: 'mdakash200',
+    repo: 'Moviebox',
+    token: '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'
+};
+
+function getConfig() {
+    return {
+        user: localStorage.getItem('gh_user') || DEFAULT_CONFIG.user,
+        repo: localStorage.getItem('gh_repo') || DEFAULT_CONFIG.repo,
+        token: localStorage.getItem('gh_token') || DEFAULT_CONFIG.token
+    };
+}
+
+let globalFilesList = [];
+
+const menuToggle = document.getElementById('menuToggle');
+const dropdownMenu = document.getElementById('dropdownMenu');
+const fileListBody = document.getElementById('fileListBody');
+const emptyState = document.getElementById('emptyState');
+const fileCountBadge = document.getElementById('fileCount');
+
+menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdownMenu.classList.toggle('active');
+});
+
+document.addEventListener('click', () => {
+    dropdownMenu.classList.remove('active');
+});
+
+function closeModals() {
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    document.getElementById('progressContainer').style.display = 'none';
+}
+
+document.getElementById('btnOpenUpload').addEventListener('click', () => {
+    closeModals();
+    document.getElementById('uploadModal').classList.add('active');
+});
+
+document.getElementById('btnOpenDelete').addEventListener('click', () => {
+    closeModals();
+    populateDeleteSelect();
+    document.getElementById('deleteModal').classList.add('active');
+});
+
+document.getElementById('btnOpenSettings').addEventListener('click', () => {
+    closeModals();
+    const cfg = getConfig();
+    document.getElementById('cfgUser').value = cfg.user;
+    document.getElementById('cfgRepo').value = cfg.repo;
+    document.getElementById('cfgToken').value = cfg.token;
+    document.getElementById('settingsModal').classList.add('active');
+});
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const selectedFileName = document.getElementById('selectedFileName');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { 
+    e.preventDefault(); 
+    dropZone.classList.add('dragover'); 
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    if(e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        selectedFileName.textContent = e.dataTransfer.files[0].name;
+    }
+});
+
+fileInput.addEventListener('change', () => {
+    if(fileInput.files.length) selectedFileName.textContent = fileInput.files[0].name;
+});
+
+// টোকেন ও রিপোজিটরি ভ্যালিডেশনের সাথে ফাইল লোড করার ফাংশন
+async function fetchFiles() {
+    const cfg = getConfig();
+    const openOsBtn = document.querySelector('.btn-open-os');
+
+    fileListBody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:2rem;"><i class="fa-solid fa-spinner fa-spin"></i> ফাইল লোড হচ্ছে...</td></tr>`;
+    emptyState.style.display = 'none';
+
+    if (!cfg.token || !cfg.user || !cfg.repo) {
+        if (openOsBtn) openOsBtn.style.display = 'none';
+        fileListBody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+
+    try {
+        const res = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents`, {
+            headers: { 'Authorization': `Bearer ${cfg.token}` }
+        });
+
+        // যদি এক্সেস টোকেন সঠিক থাকে এবং গিটহাব রেসপন্স সফল দেয়
+        if (res.ok) {
+            if (openOsBtn) openOsBtn.style.display = 'inline-flex'; // Open OS বাটন দৃশ্যমান হবে
+            
+            const data = await res.json();
+            globalFilesList = data.filter(f => !PROTECTED_FILES.includes(f.name) && f.type === 'file');
+
+            fileCountBadge.textContent = globalFilesList.length;
+
+            if (globalFilesList.length === 0) {
+                fileListBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            fileListBody.innerHTML = globalFilesList.map(f => `
+                <tr>
+                    <td>
+                        <div class="file-name-cell">
+                            <i class="${getFileIcon(f.name)} file-icon"></i>
+                            <span>${f.name}</span>
+                        </div>
+                    </td>
+                    <td>${(f.size / 1024).toFixed(1)} KB</td>
+                    <td style="text-align: right;">
+                        <a href="${f.download_url}" target="_blank" class="btn-download">
+                            <i class="fa-solid fa-download"></i> ডাউনলোড
+                        </a>
+                        <button class="btn-delete-item" onclick="directDelete('${f.name}', '${f.sha}')">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            // টোকেন ভুল বা গিটহাব ব্যর্থ হলে বাটন লুকানো থাকবে
+            if (openOsBtn) openOsBtn.style.display = 'none';
+            fileListBody.innerHTML = '';
+            emptyState.style.display = 'block';
+        }
+
+    } catch(err) {
+        if (openOsBtn) openOsBtn.style.display = 'none';
+        fileListBody.innerHTML = '';
+        emptyState.style.display = 'block';
+    }
+}
+
+function getFileIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if(['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'fa-solid fa-image';
+    if(['mp4', 'mkv', 'webm'].includes(ext)) return 'fa-solid fa-file-video';
+    if(['mp3', 'wav'].includes(ext)) return 'fa-solid fa-file-audio';
+    return 'fa-solid fa-file';
+}
+
+function populateDeleteSelect() {
+    const sel = document.getElementById('deleteFileSelect');
+    sel.innerHTML = '<option value="">-- সিলেক্ট ফাইল --</option>' + 
+        globalFilesList.map(f => `<option value="${f.name}|${f.sha}">${f.name}</option>`).join('');
+}
+
+document.getElementById('settingsForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    localStorage.setItem('gh_user', document.getElementById('cfgUser').value.trim());
+    localStorage.setItem('gh_repo', document.getElementById('cfgRepo').value.trim());
+    localStorage.setItem('gh_token', document.getElementById('cfgToken').value.trim());
+    closeModals();
+    fetchFiles();
+});
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const file = fileInput.files[0];
+    if(!file) return;
+
+    const cfg = getConfig();
+    const commitMsg = document.getElementById('commitMsg').value;
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const progressPercent = document.getElementById('uploadProgressPercent');
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+
+    progressContainer.style.display = 'block';
+    submitBtn.disabled = true;
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const base64Content = reader.result.split(',')[1];
+        
+        progressBar.style.width = '50%';
+        progressPercent.textContent = '50%';
+
+        try {
+            const res = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${file.name}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${cfg.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: commitMsg, content: base64Content })
+            });
+
+            if(res.ok) {
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                setTimeout(() => {
+                    closeModals();
+                    submitBtn.disabled = false;
+                    fetchFiles();
+                }, 500);
+            } else {
+                alert('আপলোড ব্যর্থ হয়েছে!');
+                submitBtn.disabled = false;
+            }
+        } catch(err) {
+            alert('ত্রুটি: ' + err.message);
+            submitBtn.disabled = false;
+        }
+    };
+});
+
+async function directDelete(fileName, sha) {
+    if(!confirm(`'${fileName}' মুছে ফেলতে চান?`)) return;
+    const cfg = getConfig();
+    try {
+        const res = await fetch(`https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${fileName}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${cfg.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: `Delete ${fileName}`, sha: sha })
+        });
+
+        if(res.ok) fetchFiles();
+        else alert('ডিলেট ব্যর্থ হয়েছে!');
+    } catch(err) {
+        alert('ত্রুটি: ' + err.message);
+    }
+}
+
+document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const val = document.getElementById('deleteFileSelect').value;
+    if(!val) return;
+    const [name, sha] = val.split('|');
+    closeModals();
+    await directDelete(name, sha);
+});
+
+document.getElementById('btnRefresh').addEventListener('click', fetchFiles);
+document.addEventListener('DOMContentLoaded', fetchFiles);
+
+    </script>
+</body>
+</html>
